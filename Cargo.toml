@@ -1,0 +1,16 @@
+[package]
+name = "html5ever-glue"
+version = "0.1.0"
+authors = ["Theodore Dubois <tblodt@icloud.com>"]
+
+[lib]
+name = "html5ever_glue"
+path = "glue.rs"
+crate-type = ["staticlib"]
+test = false
+
+[dependencies]
+libc = "*"
+html5ever = "*"
+tendril = "*"
+string_cache = "0.3"
