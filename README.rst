@@ -35,4 +35,4 @@ htmlpyever is a very single-minded binding to html5ever. You can:
     # >>> '<html><head/><body>hOI! wURLD!</body></html>'
     # not sure why the doctype doesn't show up in the serialized ElementTree
     
- That's it.
+That's it.
