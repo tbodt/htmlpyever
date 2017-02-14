@@ -10,7 +10,6 @@ cdef extern from "libxml/tree.h":
                                 tree.const_xmlChar *external_id,
                                 tree.const_xmlChar *system_id)
 
-from python cimport PyErr_WriteUnraisable
 from glue cimport h5eParser, h5eUnicode, h5eBytes, h5eCallbacks, node_t
 cimport glue
 
@@ -18,10 +17,10 @@ cimport glue
 
 cdef tree.const_xmlChar *xstr_h5e(h5eUnicode h5eutf) except NULL:
     cdef bytes utf8 = h5eutf.ptr[:h5eutf.len]
-    cdef char ch
+    cdef unsigned char ch
     for ch in utf8:
         if not tree.xmlIsChar_ch(ch):
-            raise ValueError('html5lib gave invalid xml character')
+            raise ValueError('html5ever gave invalid xml character')
     return tree._xcstr(utf8)
 
 # ok phew we're done with that
@@ -46,12 +45,15 @@ cdef class Parser:
         self.parser = glue.new_parser(&callbacks, <void *> self, <void *> self.doc)
         self.script_callback = None
 
-    def __init__(self, script_callback):
+    def __init__(self, script_callback=None):
         self.script_callback = script_callback
 
+    def __dealloc__(self):
+        glue.destroy_parser(self.parser)
+
     def feed(self, bytes data):
-        result = glue.feed_parser(self.parser, glue.h5eBytes(len(data), <char *> data))
-        print(result)
+        if glue.feed_parser(self.parser, glue.h5eBytes(len(data), <char *> data)) == -1:
+            raise ValueError('html5ever failed for some unknown reason')
 
     property root:
         def __get__(self):
@@ -67,7 +69,6 @@ cdef class Parser:
         self.run_script(cetree.elementFactory(self.lxml_doc, script))
 
     def run_script(self, script):
-        print('wtf thing happened')
         if self.script_callback is not None:
             self.script_callback(script)
 
