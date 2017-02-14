@@ -10,7 +10,7 @@ setup(
         name='htmlpyever',
         sources=['htmlpyever.pyx'],
         libraries=['html5ever_glue', 'xml2'],
-        library_dirs=['target/debug'],
+        library_dirs=['target/release'],
         include_dirs=['.', '/usr/include/libxml2'] + lxml.get_include(),
     )],
 
