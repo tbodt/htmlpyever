@@ -1,0 +1,6 @@
+[submodule "tests/html5lib-tests"]
+	path = tests/html5lib-tests
+	url = git@github.com:html5lib/html5lib-tests
+[submodule "tests/data"]
+	path = tests/data
+	url = git@github.com:html5lib/html5lib-tests
