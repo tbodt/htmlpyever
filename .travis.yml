@@ -1,3 +1,5 @@
 language: python
-install: pip install -e .
+install: 
+    - pip install cython
+    - pip install -e .
 script: ./setup.py test
