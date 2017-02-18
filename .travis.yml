@@ -1,5 +1,5 @@
 language: python
 install: 
-    - pip install cython
+    - pip install cython lxml
     - pip install -e .
 script: ./setup.py test
