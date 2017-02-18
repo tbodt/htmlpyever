@@ -1,0 +1,3 @@
+language: python
+install: pip install -e .
+script: ./setup.py test
