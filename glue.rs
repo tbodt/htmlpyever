@@ -1,18 +1,21 @@
 extern crate libc;
 extern crate html5ever;
+#[macro_use] extern crate html5ever_atoms;
 extern crate string_cache;
 extern crate tendril;
 
-use html5ever::tokenizer::{Tokenizer, Attribute, TokenizerResult};
+use html5ever::tokenizer::{Tokenizer, TokenizerOpts, Attribute, TokenizerResult};
 use html5ever::tokenizer::buffer_queue::BufferQueue;
 use html5ever::tree_builder::{TreeBuilder, TreeSink, QuirksMode, NodeOrText};
 use html5ever::QualName;
 use std::borrow::Cow;
 use std::slice;
 use std::mem;
-use libc::{c_void, c_int, size_t};
+use std::ffi::CStr;
+use libc::{c_void, c_int, c_char, size_t};
 use std::panic::{catch_unwind, UnwindSafe};
 use tendril::StrTendril;
+use string_cache::atom::Atom;
 
 /// When given as a function parameter, only valid for the duration of the call.
 #[repr(C)]
@@ -334,12 +337,24 @@ declare_with_callbacks! {
 }
 
 #[no_mangle]
-pub extern "C" fn new_parser(callbacks: &'static Callbacks,
+pub unsafe extern "C" fn new_parser(callbacks: &'static Callbacks,
                              data: *const OpaqueParserUserData,
-                             document: *const OpaqueNode)
+                             document: *const OpaqueNode,
+                             frag_ctx_name: *const c_char)
                              -> Option<Box<Parser>> {
+    // MUCH CODE
+    // VERY BAD
+    // CLEANUP PLS
     catch_unwind_opt(move || {
-        let sink = CallbackTreeSink {
+        let context_qualname = if frag_ctx_name.is_null() {
+            None
+        } else {
+            Some(QualName {
+                ns: ns!(html),
+                local: Atom::from(CStr::from_ptr(frag_ctx_name).to_str().unwrap()),
+            })
+        };
+        let mut sink = CallbackTreeSink {
             parser_user_data: data,
             callbacks: callbacks,
             document: NodeHandle {
@@ -350,10 +365,21 @@ pub extern "C" fn new_parser(callbacks: &'static Callbacks,
             },
             quirks_mode: QuirksMode::NoQuirks,
         };
-        let tree_builder = TreeBuilder::new(sink, Default::default());
-        let tokenizer = Tokenizer::new(tree_builder, Default::default());
+        let (tree_builder, initial_state) = match context_qualname {
+            None => (TreeBuilder::new(sink, Default::default()), None),
+            Some(qualname) => {
+                let element = sink.create_element(qualname, Vec::new());
+                let tree_builder = TreeBuilder::new_for_fragment(sink, element, None, Default::default());
+                let state = tree_builder.tokenizer_state_for_context_elem();
+                (tree_builder, Some(state))
+            },
+        };
+        let tokenizer_opts = TokenizerOpts {
+            initial_state: initial_state,
+            ..Default::default()
+        };
         Box::new(Parser {
-            tokenizer: tokenizer
+            tokenizer: Tokenizer::new(tree_builder, tokenizer_opts),
         })
     })
 }

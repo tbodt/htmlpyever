@@ -28,7 +28,7 @@ typedef struct {
     int (*remove_from_parent)(void *data, node_t node);
 } h5eCallbacks;
 
-h5eParser* new_parser(h5eCallbacks *, void *data, node_t document);
+h5eParser* new_parser(h5eCallbacks *, void *data, node_t document, const char *frag_ctx_name);
 int destroy_parser(h5eParser *);
 int feed_parser(h5eParser *, h5eBytes);
 int end_parser(h5eParser *);
