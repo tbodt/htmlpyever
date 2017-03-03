@@ -2,3 +2,7 @@ target
 Cargo.lock
 build
 target
+htmlpyever.egg-info
+dist
+.cache
+.eggs
