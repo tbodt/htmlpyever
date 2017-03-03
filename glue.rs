@@ -6,7 +6,7 @@ extern crate tendril;
 
 use html5ever::tokenizer::{Tokenizer, TokenizerOpts, Attribute, TokenizerResult};
 use html5ever::tokenizer::buffer_queue::BufferQueue;
-use html5ever::tree_builder::{TreeBuilder, TreeSink, QuirksMode, NodeOrText};
+use html5ever::tree_builder::{TreeBuilder, TreeBuilderOpts, TreeSink, QuirksMode, NodeOrText};
 use html5ever::QualName;
 use std::borrow::Cow;
 use std::slice;
@@ -201,7 +201,7 @@ impl TreeSink for CallbackTreeSink {
                 call!(self, insert_text_before_sibling(sibling.ptr, CUnicode::from_str(text)))
             }
         });
-        if result > 0 {
+        if result == 0 {
             Ok(())
         } else {
             Err(child)
@@ -340,7 +340,8 @@ declare_with_callbacks! {
 pub unsafe extern "C" fn new_parser(callbacks: &'static Callbacks,
                              data: *const OpaqueParserUserData,
                              document: *const OpaqueNode,
-                             frag_ctx_name: *const c_char)
+                             frag_ctx_name: *const c_char,
+                             scripting_enabled: c_int)
                              -> Option<Box<Parser>> {
     // MUCH CODE
     // VERY BAD
@@ -365,11 +366,15 @@ pub unsafe extern "C" fn new_parser(callbacks: &'static Callbacks,
             },
             quirks_mode: QuirksMode::NoQuirks,
         };
+        let tree_builder_options = TreeBuilderOpts {
+            scripting_enabled: scripting_enabled != 0,
+            ..Default::default()
+        };
         let (tree_builder, initial_state) = match context_qualname {
-            None => (TreeBuilder::new(sink, Default::default()), None),
+            None => (TreeBuilder::new(sink, tree_builder_options), None),
             Some(qualname) => {
                 let element = sink.create_element(qualname, Vec::new());
-                let tree_builder = TreeBuilder::new_for_fragment(sink, element, None, Default::default());
+                let tree_builder = TreeBuilder::new_for_fragment(sink, element, None, tree_builder_options);
                 let state = tree_builder.tokenizer_state_for_context_elem();
                 (tree_builder, Some(state))
             },

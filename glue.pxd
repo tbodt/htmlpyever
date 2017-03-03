@@ -30,7 +30,7 @@ cdef extern from "glue.h":
         int (*reparent_children)(void *data, node_t node, node_t new_parent)
         int (*remove_from_parent)(void *data, node_t node)
 
-    h5eParser* new_parser(h5eCallbacks *, void *data, node_t document, const char *frag_ctx_name)
+    h5eParser* new_parser(h5eCallbacks *, void *data, node_t document, const char *frag_ctx_name, int scripting_enabled)
     int destroy_parser(h5eParser *)
     # if any of the callbacks threw an exception then this will return -1
     int feed_parser(h5eParser *, h5eBytes) except? -1
