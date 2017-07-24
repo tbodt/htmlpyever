@@ -11,7 +11,7 @@ test = false
 
 [dependencies]
 libc = "*"
-html5ever = { path = "html5ever" }
-html5ever-atoms = { path = "html5ever/atoms" }
-tendril = "*"
-string_cache = "0.3"
+html5ever = "^0.13"
+html5ever-atoms = "^0.2"
+tendril = "^0.2.2"
+string_cache = "^0.4"
